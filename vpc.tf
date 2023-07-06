@@ -1,0 +1,103 @@
+resource "aws_vpc" "main" {
+  cidr_block       = var.main_cidr_block
+  enable_dns_hostnames = true
+  enable_dns_support =  true
+  tags = {
+    Name = "main"
+  }
+}
+
+resource "aws_subnet" "public_subnets" {
+  count = length (var.public_cidr_blocks)
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.public_cidr_blocks[count.index]
+  availability_zone = var.az[count.index]
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "public_subnets_${count.index+1}"
+  }
+}
+
+resource "aws_subnet" "private_subnets" {
+  count = length (var.private_cidr_blocks)
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.private_cidr_blocks[count.index]
+  availability_zone = var.az[count.index]
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "private_subnets_${count.index+1}"
+  }
+}
+
+resource "aws_security_group" "presentation_tire" {
+  name        = "allow traffic to presentation tire"
+  description = "Allow HTTP "
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    security_groups = [aws_security_group.alb_presentation_tire.id]
+  }
+  ingress{
+    cidr_blocks = [
+    "0.0.0.0/0"
+    ]
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+  }
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    security_groups = [aws_security_group.alb_presentation_tire.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "presentation_tire_sg"
+  }
+}
+
+resource "aws_security_group" "alb_presentation_tire" {
+  name        = "allow connection to alb presentation tire"
+  description = "Allow HTTP "
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = {
+    Name = "alb_presentation_tire_sg"
+  }
+}
