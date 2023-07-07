@@ -196,6 +196,4 @@ resource "aws_route_table_association" "public_route_association" {
   count          = length(var.private_cidr_blocks)
   subnet_id      = aws_subnet.public_subnets[count.index].id
   route_table_id = aws_route_table.public_route.id
-=======
->>>>>>> origin/main
 }
