@@ -100,7 +100,6 @@ resource "aws_security_group" "alb_presentation_tire" {
   tags = {
     Name = "alb_presentation_tire_sg"
   }
-<<<<<<< HEAD
 }
 
 resource "aws_security_group" "application_tire" {
@@ -171,7 +170,7 @@ resource "aws_security_group" "alb_application_tire" {
   }
 }
 
-resource "aws_internet_gateway" "igw" {
+resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
@@ -184,7 +183,7 @@ resource "aws_route_table" "public_route" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
+    gateway_id = aws_internet_gateway.gw.id
   }
 
   tags = {
@@ -203,6 +202,12 @@ resource "aws_route_table" "private_route" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.nat.id
+    nat_gateway_id = aws_nat_gateway.gw[count.index].id
   }
+}
+
+resource "aws_route_table_association" "private_route_association" {
+  count          = length(var.private_cidr_blocks)
+  subnet_id      = aws_subnet.private_subnets[count.index].id
+  route_table_id = aws_route_table.private_route[count.index].id
 }
