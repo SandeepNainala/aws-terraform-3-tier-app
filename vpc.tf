@@ -101,3 +101,98 @@ resource "aws_security_group" "alb_presentation_tire" {
     Name = "alb_presentation_tire_sg"
   }
 }
+
+resource "aws_security_group" "application_tire" {
+  name        = "allow traffic to application tire"
+  description = "Allow HTTP "
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    security_groups = [aws_security_group.alb_application_tire.id]
+  }
+  ingress{
+    cidr_blocks = [
+      ["10.0.1.0/24","10.0.2.0/24"]
+    ]
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+  }
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    security_groups = [aws_security_group.alb_application_tire.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = {
+    Name = "application_tire_sg"
+  }
+}
+
+resource "aws_security_group" "alb_application_tire" {
+  name        = "allow connection to alb application tire"
+  description = "Allow HTTP "
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    security_groups = [aws_security_group.presentation_tire]
+  }
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    security_groups = [aws_security_group.presentation_tire.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = {
+    Name = "alb_application_tire_sg"
+  }
+}
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "main"
+  }
+}
+
+resource "aws_route_table" "public_route" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "public_route"
+  }
+}
+
+resource "aws_route_table_association" "public_route_association" {
+  count          = length(var.private_cidr_blocks)
+  subnet_id      = aws_subnet.public_subnets[count.index].id
+  route_table_id = aws_route_table.public_route.id
+}
