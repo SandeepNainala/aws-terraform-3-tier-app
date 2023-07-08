@@ -32,6 +32,10 @@ variable "engine_version" {
   type    = number
   default = "5.7.37"
 }
+variable "multi_azs" {
+  type    = bool
+  default = false
+}
 variable "db_name" {
   type    = string
   default = "mydb"
@@ -45,4 +49,12 @@ variable "rds_db_username" {
 variable "rds_db_password" {
   type    = string
   default = "itismydb"
+}
+variable "instance_class" {
+  type    = string
+  default = "db.t2.micro"
+}
+variable "db_engine" {
+  type    = string
+  default = "mydb"
 }
