@@ -2,7 +2,7 @@ module "rds" {
   source            = "./modules/rds"
   subnets           =  aws_subnet.private_subnets
   vpc_id            = aws_vpc.main.id
-  from_sgs          = [aws_security_group.application_tire]
+  from_sg          = [aws_security_group.application_tire]
   allocated_storage = var.allocated_storage
   engine_version    = var.engine_version
   multi_azs         = false

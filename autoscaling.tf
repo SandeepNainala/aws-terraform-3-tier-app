@@ -43,3 +43,13 @@ resource "aws_autoscaling_group" "application_tire" {
     propagate_at_launch     = true
   }
 }
+
+resource "aws_autoscaling_attachment" "presentation_tire" {
+  autoscaling_group_name    = aws_autoscaling_group.presentation_tire.id
+  lb_target_group_arn       = aws_lb_target_group.front_end.arn
+}
+
+resource "aws_autoscaling_attachment" "application_tire" {
+  autoscaling_group_name    = aws_autoscaling_group.application_tire.id
+  lb_target_group_arn       = aws_lb_target_group.application_tire.arn
+}
