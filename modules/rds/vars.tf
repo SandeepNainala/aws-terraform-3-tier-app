@@ -27,3 +27,9 @@ variable "db_password" {
   type    = string
   default = "itismydb"
 }
+variable "vpc_id" {
+  type   = string
+}
+variable "from_sg" {
+  type   = list(any)
+}
